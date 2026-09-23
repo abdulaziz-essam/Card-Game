@@ -3,10 +3,25 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@expo-google-fonts/bangers": "^0.4.1",
+    "@expo-google-fonts/permanent-marker": "^0.4.0",
+    "@react-navigation/native": "^7.4.1",
+    "@react-navigation/stack": "^7.11.2",
+    "@react-three/fiber": "^9.8.0",
     "expo": "~57.0.24",
+    "expo-av": "^16.0.8",
+    "expo-font": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
-    "react-native": "0.86.3"
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "^3.3.0",
+    "react-native-safe-area-context": "^5.10.0",
+    "react-native-screens": "^4.28.0",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "^0.21.2",
+    "three": "^0.186.0",
+    "zustand": "^5.0.15"
   },
   "scripts": {
     "start": "expo start",
@@ -14,5 +29,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "typescript": "~6.0.3"
+  }
 }
