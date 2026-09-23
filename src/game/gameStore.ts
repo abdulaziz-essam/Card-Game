@@ -5,11 +5,13 @@ import { decideCard, decideTarget } from './AIOpponent';
 export interface LocationState {
   name: string;
   description: string;
+  maxCards: number;        // how many players fit this zone
   playerCards: PlayingCard[];
   aiCards: PlayingCard[];
 }
 
-const MAX_CARDS_PER_SIDE = 4;
+// True 11v11: GK=1, DEF=4, MID=3, ATK=3 → 11 per side across 4 zones
+const HAND_SIZE = 11;
 
 function locationPower(cards: PlayingCard[]) {
   return cards.reduce((sum, c) => sum + c.power, 0);
@@ -38,12 +40,13 @@ interface GameState {
 
 function makeInitialState() {
   return {
-    playerHand: generateHand(7),
-    aiHand: generateHand(7),
+    playerHand: generateHand(HAND_SIZE),
+    aiHand: generateHand(HAND_SIZE),
     locations: [
-      { name: 'Tower Alpha', description: 'The first battleground', playerCards: [], aiCards: [] },
-      { name: 'Tower Beta', description: 'The second battleground', playerCards: [], aiCards: [] },
-      { name: 'Tower Gamma', description: 'The third battleground', playerCards: [], aiCards: [] },
+      { name: 'Goalkeeper', description: 'Last line of defence',      maxCards: 1, playerCards: [], aiCards: [] },
+      { name: 'Defence',    description: 'Hold the defensive line',   maxCards: 4, playerCards: [], aiCards: [] },
+      { name: 'Midfield',   description: 'Control the centre',        maxCards: 3, playerCards: [], aiCards: [] },
+      { name: 'Attack',     description: 'Press the opponent\'s goal', maxCards: 3, playerCards: [], aiCards: [] },
     ],
     isPlayerTurn: true,
     gameOver: false,
@@ -59,7 +62,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!state.isPlayerTurn || state.gameOver) return;
 
     const loc = state.locations[locationIndex];
-    if (loc.playerCards.length >= MAX_CARDS_PER_SIDE) return;
+    if (loc.playerCards.length >= loc.maxCards) return;
 
     const newLocations = state.locations.map((l, i) =>
       i === locationIndex
@@ -70,15 +73,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({ locations: newLocations, playerHand: newPlayerHand, isPlayerTurn: false });
 
-    // Check game end before AI move
-    const nextState = get();
-    if (_isGameOver(newPlayerHand, nextState.aiHand)) {
+    if (_isGameOver(newPlayerHand, get().aiHand)) {
       _resolveGame(newLocations, set);
       return;
     }
 
-    // AI moves after 2s
-    setTimeout(() => get()._aiMove(), 2000);
+    setTimeout(() => get()._aiMove(), 1800);
   },
 
   _aiMove: () => {
@@ -86,16 +86,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (state.isPlayerTurn || state.gameOver) return;
 
     const aiCardsPerLoc = state.locations.map(l => l.aiCards.length);
+    const aiMaxPerLoc   = state.locations.map(l => l.maxCards);
     const card = decideCard(state.aiHand, 'medium');
 
     let newLocations = state.locations;
     let newAiHand = state.aiHand;
 
     if (card) {
-      const targetIdx = decideTarget(aiCardsPerLoc, 'medium');
+      const targetIdx = decideTarget(aiCardsPerLoc, 'medium', aiMaxPerLoc);
       const loc = state.locations[targetIdx];
 
-      if (loc.aiCards.length < MAX_CARDS_PER_SIDE) {
+      if (loc.aiCards.length < loc.maxCards) {
         newLocations = state.locations.map((l, i) =>
           i === targetIdx
             ? { ...l, aiCards: [...l.aiCards, card] }
